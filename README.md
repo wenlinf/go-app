@@ -9,7 +9,7 @@ Follow this guide to get Shifu up and running: https://shifu.dev/docs/tutorials/
 Follow this guide to get the digital twin of the microplate reader up and running: https://shifu.dev/docs/tutorials/demo-try/#3-interact-with-the-microplate-reader
 #### Step 3
 ```
-cd go_app
+cd go-app-calling-shifu-api
 sudo kubectl apply -f deployment.yaml
 ``` 
 To see the logs:
