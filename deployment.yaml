@@ -13,10 +13,10 @@ spec:
         app: go-app
     spec:
       imagePullSecrets:
-        - name: my-dockerhub-secret   # Name of the secret you created
+        - name: my-dockerhub-secret
       containers:
         - name: go-app
-          image: wenlinf0604/go-app:v1.1  # Replace "tag" with your desired image tag
+          image: wenlinf0604/go-app:v1.4 
           ports:
             - containerPort: 8080
 

@@ -1,52 +1,68 @@
 package main
 
 import (
-    "fmt"
-    "io/ioutil"
-    "net/http"
-    "time"
+	"fmt"
+	"io/ioutil"
+	"net/http"
+	"strconv"
+	"strings"
+	"time"
 )
 
-func getMeasurement() (float64, error) {
+func getMatrix() ([]float64, error) {
+    // send request to get response matrix from microplate reader
 	url := "http://deviceshifu-plate-reader.deviceshifu.svc.cluster.local:80/get_measurement"
 
-    resp, err := http.Get(url)
-    if err != nil {
-        return 0, err
-    }
-    defer resp.Body.Close()
+	resp, err := http.Get(url)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
 
-    body, err := ioutil.ReadAll(resp.Body)
-    if err != nil {
-        return 0, err
-    }
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
 
-    measurementValue := 0.0
-    _, err = fmt.Sscanf(string(body), "%f", &measurementValue)
-    if err != nil {
-        return 0, err
-    }
+    // convert the reponse to an array of floats and return the array
+	lines := strings.Split(string(body), "\n")
+	var matrix []float64
 
-    return measurementValue, nil
+	for _, line := range lines {
+		fields := strings.Fields(line)
+		for _, field := range fields {
+			value, err := strconv.ParseFloat(field, 64)
+			if err != nil {
+				return nil, err
+			}
+			matrix = append(matrix, value)
+		}
+	}
+
+	return matrix, nil
 }
 
 func main() {
-    interval := 1 * time.Minute
-    numMeasurements := 5
+    // set the interval to call the microplate reader
+	interval := 1 * time.Minute
 
-    var totalMeasurement float64
+	for {
+		matrix, err := getMatrix()
+		if err != nil {
+			fmt.Println("Error:", err)
+			continue
+		}
+        // calculate the average of the returned values and print it out
+		var totalMeasurement float64
+		numMeasurements := len(matrix)
 
-    for i := 0; i < numMeasurements; i++ {
-        measurement, err := getMeasurement()
-        if err != nil {
-            fmt.Println("Error:", err)
-            continue
-        }
-        fmt.Println("Measurement:", measurement)
-        totalMeasurement += measurement
-        time.Sleep(interval)
-    }
+		for _, value := range matrix {
+			totalMeasurement += value
+		}
 
-    average := totalMeasurement / float64(numMeasurements)
-    fmt.Println("Average:", average)
+		average := totalMeasurement / float64(numMeasurements)
+		fmt.Println("Average:", average)
+
+		time.Sleep(interval)
+	}
 }
